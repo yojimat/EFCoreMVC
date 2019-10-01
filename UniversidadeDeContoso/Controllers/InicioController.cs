@@ -1,21 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using UniversidadeDeContoso.Models;
 
 namespace UniversidadeDeContoso.Controllers
 {
-    public class HomeController : Controller
+    public class InicioController : Controller
     {
         public IActionResult Index()
         {
             return View();
         }
 
-        public IActionResult Privacy()
+        public IActionResult Privacidade()
         {
             return View();
         }
