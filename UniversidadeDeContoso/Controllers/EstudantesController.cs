@@ -1,7 +1,7 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Threading.Tasks;
 using UniversidadeDeContoso.Dados;
 using UniversidadeDeContoso.Models;
 
@@ -11,24 +11,60 @@ namespace UniversidadeDeContoso.Controllers
     {
         private readonly UniversidadeContext _context;
 
-        public EstudantesController(UniversidadeContext context)
-        {
-            _context = context;
-        }
+        public EstudantesController(UniversidadeContext context) => _context = context;
 
         // GET: Estudantes
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(
+            string tipoDeOrdenamento, 
+            string textoProcurado,
+            string filtroSelecionado,
+            int? numeroDaPagina
+        )
         {
-            return View(await _context.Estudantes.ToListAsync());
+            ViewData["OrdenamentoSelecionado"] = tipoDeOrdenamento;
+            ViewData["parametroNome"] = string.IsNullOrEmpty(tipoDeOrdenamento) ? "nome_desc" : "";
+            ViewData["parametroData"] = tipoDeOrdenamento == "Data" ? "data_desc" : "Data";
+
+
+            if (textoProcurado != null)
+                numeroDaPagina = 1;
+            else
+                textoProcurado = filtroSelecionado;
+
+            ViewData["FiltroSelecionado"] = textoProcurado;
+
+            var estudantes = from e in _context.Estudantes
+                             select e;
+
+            if (!string.IsNullOrEmpty(textoProcurado))
+                estudantes = estudantes.Where(e => e.SobreNome.Contains(textoProcurado) || e.Nome.Contains(textoProcurado));
+
+            switch (tipoDeOrdenamento)
+            {
+                case "nome_desc":
+                    estudantes = estudantes.OrderByDescending(s => s.Nome);
+                    break;
+                case "Data":
+                    estudantes = estudantes.OrderBy(s => s.DataDeMatricula);
+                    break;
+                case "data_desc":
+                    estudantes = estudantes.OrderByDescending(s => s.DataDeMatricula);
+                    break;
+                default:
+                    estudantes = estudantes.OrderBy(s => s.SobreNome);
+                    break;
+            }
+
+            int tamanhoDaPagina = 3;
+
+            return View(await ListaComPaginas<Estudante>.CreateAsync(estudantes.AsNoTracking(), numeroDaPagina ?? 1, tamanhoDaPagina));
         }
 
         // GET: Estudantes/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var estudante = await _context.Estudantes
                 .Include(e => e.Materias)
@@ -37,18 +73,13 @@ namespace UniversidadeDeContoso.Controllers
                 .FirstOrDefaultAsync(e => e.ID == id);
 
             if (estudante == null)
-            {
                 return NotFound();
-            }
 
             return View(estudante);
         }
 
         // GET: Estudantes/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
+        public IActionResult Create() => View();
 
         // POST: Estudantes/Create
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
@@ -80,15 +111,13 @@ namespace UniversidadeDeContoso.Controllers
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var estudante = await _context.Estudantes.FindAsync(id);
+
             if (estudante == null)
-            {
                 return NotFound();
-            }
+
             return View(estudante);
         }
 
@@ -163,11 +192,6 @@ namespace UniversidadeDeContoso.Controllers
                 //Log the error (uncomment ex variable name and write a log.)
                 return RedirectToAction(nameof(Delete), new { id, saveChangesError = true });
             }
-        }
-
-        private bool EstudanteExists(int id)
-        {
-            return _context.Estudantes.Any(e => e.ID == id);
         }
     }
 }

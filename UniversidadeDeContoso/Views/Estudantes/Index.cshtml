@@ -1,4 +1,4 @@
-﻿@model IEnumerable<UniversidadeDeContoso.Models.Estudante>
+﻿@model ListaComPaginas<UniversidadeDeContoso.Models.Estudante>
 
 @{
     ViewData["Title"] = "Index";
@@ -9,39 +9,71 @@
 <p>
     <a asp-action="Create">Criar novo estudante</a>
 </p>
+
+<form asp-action="Index" method="get">
+    <div class="form-actions no-color">
+        <p>
+            Procure pelo o nome: <input type="text" name="TextoProcurado" value="@ViewData["FiltroSelecionado"]" />
+            <input type="submit" value="Pesquisar" class="btn btn-default" /> |
+            <a asp-action="Index"> Voltar para lista completa</a>
+        </p>
+    </div>
+</form>
+
 <table class="table">
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.SobreNome)
+                <a asp-action="Index" asp-route-tipoOrdenamento="@ViewData["parametroNome"]" asp-route-filtroSelecionado="@ViewData["FiltroSelecionado"]">Sobrenome</a>
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Nome)
+                Nome
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.DataDeMatricula)
+                <a asp-action="Index" asp-route-tipoOrdenamento="@ViewData["parametroData"]" asp-route-filtroSelecionado="@ViewData["FiltroSelecionado"]">Data de matrícula</a>
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.SobreNome)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Nome)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.DataDeMatricula)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.ID">Editar</a> |
-                <a asp-action="Details" asp-route-id="@item.ID">Detalhes</a> |
-                <a asp-action="Delete" asp-route-id="@item.ID">Deletar</a>
-            </td>
-        </tr>
-}
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.SobreNome)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Nome)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DataDeMatricula)
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.ID">Editar</a> |
+                    <a asp-action="Details" asp-route-id="@item.ID">Detalhes</a> |
+                    <a asp-action="Delete" asp-route-id="@item.ID">Deletar</a>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
+
+@{
+    var anteriorDesativado = !Model.TemPaginaAnterior ? "disabled" : "";
+    var proximoDesativado = !Model.TemProximaPagina ? "disabled" : "";
+}
+
+<a asp-action="Index"
+   asp-route-tipoOrdenamento="@ViewData["OrdenamentoSelecionado"]"
+   asp-route-numeroDaPagina="@(Model.IndexPagina - 1)"
+   asp-route-filtroSelecionado="@ViewData["FiltroSelecionado"]"
+   class="btn btn-default @anteriorDesativado">
+    Anterior
+</a>
+<a asp-action="Index"
+   asp-route-tipoOrdenamento="@ViewData["OrdenamentoSelecionado"]"
+   asp-route-numeroDaPagina="@(Model.IndexPagina + 1)"
+   asp-route-filtroSelecionado="@ViewData["FiltroSelecionado"]"
+   class="btn btn-default @proximoDesativado">
+    Proxima
+</a>
