@@ -37,7 +37,7 @@ namespace UniversidadeDeContoso.Controllers
                              select e;
 
             if (!string.IsNullOrEmpty(textoProcurado))
-                estudantes = estudantes.Where(e => e.SobreNome.Contains(textoProcurado) || e.Nome.Contains(textoProcurado));
+                estudantes = estudantes.Where(e => e.Sobrenome.Contains(textoProcurado) || e.Nome.Contains(textoProcurado));
 
             switch (tipoDeOrdenamento)
             {
@@ -51,7 +51,7 @@ namespace UniversidadeDeContoso.Controllers
                     estudantes = estudantes.OrderByDescending(s => s.DataDeMatricula);
                     break;
                 default:
-                    estudantes = estudantes.OrderBy(s => s.SobreNome);
+                    estudantes = estudantes.OrderBy(s => s.Sobrenome);
                     break;
             }
 
@@ -70,7 +70,7 @@ namespace UniversidadeDeContoso.Controllers
                 .Include(e => e.Materias)
                 .ThenInclude(m => m.Curso)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(e => e.ID == id);
+                .FirstOrDefaultAsync(e => e.Id == id);
 
             if (estudante == null)
                 return NotFound();
@@ -131,9 +131,9 @@ namespace UniversidadeDeContoso.Controllers
             if (id == null)
                 return NotFound();
 
-            var estudandoParaEdicao = await _context.Estudantes.FirstOrDefaultAsync(e => e.ID == id);
+            var estudandoParaEdicao = await _context.Estudantes.FirstOrDefaultAsync(e => e.Id == id);
 
-            if (await TryUpdateModelAsync(estudandoParaEdicao, "", e => e.Nome, e => e.SobreNome, e => e.DataDeMatricula))
+            if (await TryUpdateModelAsync(estudandoParaEdicao, "", e => e.Nome, e => e.Sobrenome, e => e.DataDeMatricula))
             {
                 try
                 {
@@ -157,7 +157,7 @@ namespace UniversidadeDeContoso.Controllers
 
             var estudante = await _context.Estudantes
                 .AsNoTracking()
-                .FirstOrDefaultAsync(e => e.ID == id);
+                .FirstOrDefaultAsync(e => e.Id == id);
 
             if (estudante == null)
                 return NotFound();

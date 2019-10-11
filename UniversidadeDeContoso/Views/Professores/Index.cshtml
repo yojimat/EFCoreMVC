@@ -1,0 +1,124 @@
+﻿@model UniversidadeDeContoso.Models.UniversidadeViewModels.IndexDadosProfessor
+
+@{ ViewData["Title"] = "Index"; }
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Criar Novo</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Sobrenome</th>
+            <th>Primeiro nome</th>
+            <th>Data de contratação</th>
+            <th>Sala</th>
+            <th>Cursos</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Professores)
+        {
+
+            var fileiraSelecionada = "";
+
+            if (item.Id == (int?)ViewData["ProfessorId"])
+            { fileiraSelecionada = "table-success"; }
+
+            <tr class="@fileiraSelecionada">
+                <td>
+                    @Html.DisplayFor(modelItem => item.Sobrenome)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Nome)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DataContratacao)
+                </td>
+                <td>
+                    @if (item.Sala != null)
+                    {
+                        @item.Sala.Localizacao
+                    }
+                </td>
+                <td>
+                    @{
+                        foreach (var curso in item.AtribuicaoCursos)
+                        {
+                            @curso.Curso.CursoId @:  @curso.Curso.Nome <br />
+                        }
+                    }
+                </td>
+                <td>
+                    <a asp-action="Index" asp-route-id="@item.Id">Selecionar</a> |
+                    <a asp-action="Edit" asp-route-id="@item.Id">Editar</a> |
+                    <a asp-action="Details" asp-route-id="@item.Id">Detalhes</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">Excluir</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (Model.Cursos != null)
+{
+    <h3>Cursos ministrados pelo o professor</h3>
+    <table class="table">
+        <tr>
+            <th></th>
+            <th>Numero</th>
+            <th>nome</th>
+            <th>Departmento</th>
+        </tr>
+
+        @foreach (var item in Model.Cursos)
+        {
+            string filereiraSelecionada = "";
+            if (item.CursoId == (int?)ViewData["CursoId"])
+            {
+                filereiraSelecionada = "table-success";
+            }
+            <tr class="@filereiraSelecionada">
+                <td>
+                    @Html.ActionLink("Select", "Index", new { cursoId = item.CursoId })
+                </td>
+                <td>
+                    @item.CursoId
+                </td>
+                <td>
+                    @item.Nome
+                </td>
+                <td>
+                    @item.Departamento.Nome
+                </td>
+            </tr>
+        }
+
+    </table>
+}
+
+@if (Model.Materias != null)
+{
+    <h3>
+        Estudantes matrículados no curso selecionado
+    </h3>
+    <table class="table">
+        <tr>
+            <th>Nome</th>
+            <th>Nota</th>
+        </tr>
+        @foreach (var item in Model.Materias)
+        {
+            <tr>
+                <td>
+                    @item.Estudante.NomeCompleto
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Nota)
+                </td>
+            </tr>
+        }
+    </table>
+}

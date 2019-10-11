@@ -1,4 +1,6 @@
-﻿namespace UniversidadeDeContoso.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace UniversidadeDeContoso.Models
 {
     public enum Nota
     {
@@ -6,9 +8,11 @@
     }
     public class Materia
     {
-        public int MateriaID { get; set; }
-        public int CursoID { get; set; }
-        public int EstudanteID { get; set; }
+        public int MateriaId { get; set; }
+        public int CursoId { get; set; }
+        public int EstudanteId { get; set; }
+
+        [DisplayFormat(NullDisplayText = "Nota não atribuída")]
         public Nota? Nota { get; set; }
 
         public Curso Curso { get; set; }

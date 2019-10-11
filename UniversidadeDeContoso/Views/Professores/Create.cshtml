@@ -1,12 +1,12 @@
-﻿@model UniversidadeDeContoso.Models.Estudante
+﻿@model UniversidadeDeContoso.Models.Professor
 
 @{
-    ViewData["Title"] = "Criar";
+    ViewData["Title"] = "Create";
 }
 
-<h1>Criar</h1>
+<h1>Create</h1>
 
-<h4>Estudante</h4>
+<h4>Professor</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
@@ -23,19 +23,19 @@
                 <span asp-validation-for="Nome" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="DataDeMatricula" class="control-label"></label>
-                <input asp-for="DataDeMatricula" class="form-control" />
-                <span asp-validation-for="DataDeMatricula" class="text-danger"></span>
+                <label asp-for="DataContratacao" class="control-label"></label>
+                <input asp-for="DataContratacao" class="form-control" />
+                <span asp-validation-for="DataContratacao" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <input type="submit" value="Criar" class="btn btn-primary" />
+                <input type="submit" value="Create" class="btn btn-primary" />
             </div>
         </form>
     </div>
 </div>
 
 <div>
-    <a asp-action="Index">Volta para lista</a>
+    <a asp-action="Index">Back to List</a>
 </div>
 
 @section Scripts {

@@ -40,7 +40,7 @@
         {
             <tr>
                 <td>
-                    @Html.DisplayFor(modelItem => item.SobreNome)
+                    @Html.DisplayFor(modelItem => item.Sobrenome)
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.Nome)
@@ -49,9 +49,9 @@
                     @Html.DisplayFor(modelItem => item.DataDeMatricula)
                 </td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@item.ID">Editar</a> |
-                    <a asp-action="Details" asp-route-id="@item.ID">Detalhes</a> |
-                    <a asp-action="Delete" asp-route-id="@item.ID">Deletar</a>
+                    <a asp-action="Edit" asp-route-id="@item.Id">Editar</a> |
+                    <a asp-action="Details" asp-route-id="@item.Id">Detalhes</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">Deletar</a>
                 </td>
             </tr>
         }

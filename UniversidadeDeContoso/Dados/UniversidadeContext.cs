@@ -14,6 +14,11 @@ namespace UniversidadeDeContoso.Dados
         public DbSet<Curso> Cursos { get; set; }
         public DbSet<Materia> Materias { get; set; }
         public DbSet<Estudante> Estudantes { get; set; }
+        public DbSet<Departamento> Departamentos { get; set; }
+        public DbSet<Professor> Professores { get; set; }
+        public DbSet<AtribuicaoSala> AtribuicaoSalas { get; set; }
+        public DbSet<AtribuicaoCurso> AtribuicaoCursos { get; set; }
+
 
         /// <summary>
         /// Método herdado de DbContext para o alterar os nomes gerados automaticamente por ele;
@@ -25,6 +30,12 @@ namespace UniversidadeDeContoso.Dados
             modelBuilder.Entity<Curso>().ToTable("Curso");
             modelBuilder.Entity<Materia>().ToTable("Materia");
             modelBuilder.Entity<Estudante>().ToTable("Estudante");
+            modelBuilder.Entity<Departamento>().ToTable("Department");
+            modelBuilder.Entity<Professor>().ToTable("Professor");
+            modelBuilder.Entity<AtribuicaoSala>().ToTable("OfficeAssignment");
+            modelBuilder.Entity<AtribuicaoCurso>().ToTable("CourseAssignment");
+
+            modelBuilder.Entity<AtribuicaoCurso>().HasKey(c => new {c.CursoId, c.ProfessorId});
         }
     }   
 }
