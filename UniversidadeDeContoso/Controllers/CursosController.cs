@@ -32,6 +32,7 @@ namespace UniversidadeDeContoso.Controllers
 
             var curso = await _context.Cursos
                 .Include(c => c.Departamento)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.CursoId == id);
 
             if (curso == null)
@@ -40,98 +41,103 @@ namespace UniversidadeDeContoso.Controllers
             return View(curso);
         }
 
-        // GET: Cursos/Create
         public IActionResult Create()
         {
-            ViewData["DepartamentoId"] = new SelectList(_context.Departamentos, "DepartamentoId", "DepartamentoId");
+            PopularListaDropdownDepartamento();
+
             return View();
         }
 
-        // POST: Cursos/Create
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("CursoId,Nome,Creditos,DepartamentoId")] Curso curso)
+        public async Task<IActionResult> Create([Bind("CursoId,Creditos,DepartamentoId,Nome")] Curso curso)
         {
             if (ModelState.IsValid)
             {
                 _context.Add(curso);
+
                 await _context.SaveChangesAsync();
+
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["DepartamentoId"] = new SelectList(_context.Departamentos, "DepartamentoId", "DepartamentoId", curso.DepartamentoId);
+
+            PopularListaDropdownDepartamento(curso.DepartamentoId);
+
             return View(curso);
         }
 
-        // GET: Cursos/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
-            var curso = await _context.Cursos.FindAsync(id);
+            var curso = await _context.Cursos
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.CursoId == id);
+
             if (curso == null)
-            {
                 return NotFound();
-            }
-            ViewData["DepartamentoId"] = new SelectList(_context.Departamentos, "DepartamentoId", "DepartamentoId", curso.DepartamentoId);
+            
+            PopularListaDropdownDepartamento(curso.DepartamentoId);
+
             return View(curso);
         }
 
-        // POST: Cursos/Edit/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
+        [HttpPost, ActionName("Edit")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("CursoId,Nome,Creditos,DepartamentoId")] Curso curso)
+        public async Task<IActionResult> EditPost(int? id)
         {
-            if (id != curso.CursoId)
-            {
+            if (id == null)
                 return NotFound();
-            }
 
-            if (ModelState.IsValid)
+            var cursoParaAtualizar = await _context.Cursos
+                .FirstOrDefaultAsync(c => c.CursoId == id);
+
+            if (await TryUpdateModelAsync<Curso>(cursoParaAtualizar,
+                "",
+                c => c.Creditos, c => c.DepartamentoId, c => c.Nome))
             {
                 try
                 {
-                    _context.Update(curso);
                     await _context.SaveChangesAsync();
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateException ex )
                 {
-                    if (!CursoExists(curso.CursoId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    //Log the error (uncomment ex variable name and write a log.)
+                    ModelState.AddModelError("", "Unable to save changes. " +
+                                                 "Try again, and if the problem persists, " +
+                                                 $"see your system administrator. {ex}");
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["DepartamentoId"] = new SelectList(_context.Departamentos, "DepartamentoId", "DepartamentoId", curso.DepartamentoId);
-            return View(curso);
+
+            PopularListaDropdownDepartamento(cursoParaAtualizar.DepartamentoId);
+
+            return View(cursoParaAtualizar);
+        }
+
+        private void PopularListaDropdownDepartamento(object departamentoSelecionado = null)
+        {
+            var queryDeDepartamentos = from d in _context.Departamentos
+                orderby d.Nome
+                select d;
+
+            ViewBag.DepartamentoId = new SelectList(queryDeDepartamentos.AsNoTracking(), "DepartamentoId", "Nome", departamentoSelecionado);
         }
 
         // GET: Cursos/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var curso = await _context.Cursos
                 .Include(c => c.Departamento)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.CursoId == id);
+
             if (curso == null)
-            {
                 return NotFound();
-            }
 
             return View(curso);
         }
@@ -145,11 +151,6 @@ namespace UniversidadeDeContoso.Controllers
             _context.Cursos.Remove(curso);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool CursoExists(int id)
-        {
-            return _context.Cursos.Any(e => e.CursoId == id);
         }
     }
 }
