@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -71,9 +72,14 @@ namespace UniversidadeDeContoso.Controllers
             return View(professor);
         }
 
-        // GET: Professores/Create
         public IActionResult Create()
         {
+            var professor = new Professor();
+
+            professor.AtribuicaoCursos = new List<AtribuicaoCurso>();
+
+            PopularDadosCursosAtribuidos(professor);
+
             return View();
         }
 
@@ -82,14 +88,30 @@ namespace UniversidadeDeContoso.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Sobrenome,Nome,DataContratacao")] Professor professor)
+        public async Task<IActionResult> Create([Bind("Sala,Sobrenome,Nome,DataContratacao")] Professor professor, string[] cursosSelecionados)
         {
+            if (cursosSelecionados != null)
+            {
+                professor.AtribuicaoCursos = new List<AtribuicaoCurso>();
+                foreach (var curso in cursosSelecionados)
+                {
+                    var cursoParaAdicionar = new AtribuicaoCurso { ProfessorId = professor.Id, CursoId = int.Parse(curso) };
+
+                    professor.AtribuicaoCursos.Add(cursoParaAdicionar);
+                }
+            }
+
             if (ModelState.IsValid)
             {
                 _context.Add(professor);
+
                 await _context.SaveChangesAsync();
+
                 return RedirectToAction(nameof(Index));
             }
+
+            PopularDadosCursosAtribuidos(professor);
+
             return View(professor);
         }
 
@@ -97,16 +119,41 @@ namespace UniversidadeDeContoso.Controllers
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
+
+            var professor = await _context.Professores
+                .Include(i => i.Sala)
+                .Include(i => i.AtribuicaoCursos).ThenInclude(i => i.Curso)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (professor == null)
+                return NotFound();
+
+            PopularDadosCursosAtribuidos(professor);
+
+            return View(professor);
+        }
+
+        private void PopularDadosCursosAtribuidos(Professor professor)
+        {
+            var todosCursos = _context.Cursos;
+
+            var cursosProfessor = new HashSet<int>(professor.AtribuicaoCursos.Select(c => c.CursoId));
+
+            var viewModel = new List<DadosAtribuidosCurso>();
+
+            foreach (var curso in todosCursos)
+            {
+                viewModel.Add(new DadosAtribuidosCurso()
+                {
+                    CursoId = curso.CursoId,
+                    Nome = curso.Nome,
+                    Atribuido = cursosProfessor.Contains(curso.CursoId)
+                });
             }
 
-            var professor = await _context.Professores.FindAsync(id);
-            if (professor == null)
-            {
-                return NotFound();
-            }
-            return View(professor);
+            ViewData["Cursos"] = viewModel;
         }
 
         // POST: Professores/Edit/5
@@ -114,35 +161,83 @@ namespace UniversidadeDeContoso.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Sobrenome,Nome,DataContratacao")] Professor professor)
+        public async Task<IActionResult> Edit(int? id, string[] cursosSelecionados)
         {
-            if (id != professor.Id)
-            {
+            if (id == null)
                 return NotFound();
+
+            var professorParaAtualizar = await _context.Professores
+                .Include(i => i.Sala)
+                .Include(i => i.AtribuicaoCursos)
+                    .ThenInclude(i => i.Curso)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (!await TryUpdateModelAsync(
+                professorParaAtualizar,
+                "",
+                p => p.Nome, p => p.Sobrenome, p => p.DataContratacao, p => p.Sala
+            ))
+            {
+                AtualizarCursosProfessores(cursosSelecionados, professorParaAtualizar);
+
+                PopularDadosCursosAtribuidos(professorParaAtualizar);
+
+                return View(professorParaAtualizar);
             }
 
-            if (ModelState.IsValid)
+
+            if (string.IsNullOrWhiteSpace(professorParaAtualizar.Sala?.Localizacao))
+                professorParaAtualizar.Sala = null;
+
+            AtualizarCursosProfessores(cursosSelecionados, professorParaAtualizar);
+
+            try
             {
-                try
-                {
-                    _context.Update(professor);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ProfessorExists(professor.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                await _context.SaveChangesAsync();
             }
-            return View(professor);
+            catch (DbUpdateException /* ex */)
+            {
+                //Log the error (uncomment ex variable name and write a log.)
+                ModelState.AddModelError("", "Unable to save changes. " +
+                                             "Try again, and if the problem persists, " +
+                                             "see your system administrator.");
+            }
+            return RedirectToAction(nameof(Index));
+
         }
+
+        private void AtualizarCursosProfessores(string[] cursosSelecionados, Professor professorParaAtualizar)
+        {
+            if (cursosSelecionados == null)
+            {
+                professorParaAtualizar.AtribuicaoCursos = new List<AtribuicaoCurso>();
+
+                return;
+            }
+
+            var cursoSelecionadosHs = new HashSet<string>(cursosSelecionados);
+
+            var cursosProfessor = new HashSet<int>
+                (professorParaAtualizar.AtribuicaoCursos.Select(c => c.Curso.CursoId));
+
+            foreach (var curso in _context.Cursos)
+            {
+                if (cursoSelecionadosHs.Contains(curso.CursoId.ToString()))
+                {
+                    if (!cursosProfessor.Contains(curso.CursoId))
+                        professorParaAtualizar.AtribuicaoCursos.Add(new AtribuicaoCurso { ProfessorId = professorParaAtualizar.Id, CursoId = curso.CursoId });
+                }
+                else
+                {
+                    if (!cursosProfessor.Contains(curso.CursoId)) continue;
+
+                    var cursoParaRemover = professorParaAtualizar.AtribuicaoCursos.FirstOrDefault(i => i.CursoId == curso.CursoId);
+
+                    if (cursoParaRemover != null) _context.Remove((object) cursoParaRemover);
+                }
+            }
+        }
+
 
         // GET: Professores/Delete/5
         public async Task<IActionResult> Delete(int? id)
@@ -167,15 +262,21 @@ namespace UniversidadeDeContoso.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var professor = await _context.Professores.FindAsync(id);
-            _context.Professores.Remove(professor);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
+            var professor = await _context.Professores
+                .Include(i => i.AtribuicaoCursos)
+                .SingleAsync(i => i.Id == id);
 
-        private bool ProfessorExists(int id)
-        {
-            return _context.Professores.Any(e => e.Id == id);
+            var departamentos = await _context.Departamentos
+                .Where(d => d.ProfessorId == id)
+                .ToListAsync();
+
+            departamentos.ForEach(d => d.ProfessorId = null);
+
+            _context.Professores.Remove(professor);
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }
