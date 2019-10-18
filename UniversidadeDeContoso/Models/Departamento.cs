@@ -24,6 +24,9 @@ namespace UniversidadeDeContoso.Models
 
         public int? ProfessorId { get; set; }
 
+        [Timestamp]
+        public byte[] VersaoFileira { get; set; }
+
         public Professor Administrador { get; set; }
         public ICollection<Curso> Cursos { get; set; }
     }
