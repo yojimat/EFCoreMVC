@@ -18,6 +18,7 @@ namespace UniversidadeDeContoso.Dados
         public DbSet<Professor> Professores { get; set; }
         public DbSet<AtribuicaoSala> AtribuicaoSalas { get; set; }
         public DbSet<AtribuicaoCurso> AtribuicaoCursos { get; set; }
+        public DbSet<Pessoa> Pessoa { get; set; }
 
 
         /// <summary>
@@ -34,8 +35,10 @@ namespace UniversidadeDeContoso.Dados
             modelBuilder.Entity<Professor>().ToTable("Professor");
             modelBuilder.Entity<AtribuicaoSala>().ToTable("OfficeAssignment");
             modelBuilder.Entity<AtribuicaoCurso>().ToTable("CourseAssignment");
+            modelBuilder.Entity<Pessoa>().ToTable("Pessoa");
 
-            modelBuilder.Entity<AtribuicaoCurso>().HasKey(c => new {c.CursoId, c.ProfessorId});
+            modelBuilder.Entity<AtribuicaoCurso>()
+                .HasKey(c => new {c.CursoId, c.ProfessorId});
         }
     }   
 }
