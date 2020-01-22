@@ -30,10 +30,13 @@ namespace UniversidadeDeContoso.Controllers
             if (id == null)
                 return NotFound();
 
+            string query = "SELECT * FROM Department WHERE DepartamentoId = {0}";
+
             var departamento = await _context.Departamentos
+                .FromSql(query, id)
                 .Include(d => d.Administrador)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(m => m.DepartamentoId == id);
+                .FirstOrDefaultAsync();
 
             if (departamento == null)
                 return NotFound();

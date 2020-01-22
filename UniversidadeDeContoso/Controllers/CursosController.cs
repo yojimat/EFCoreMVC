@@ -152,5 +152,17 @@ namespace UniversidadeDeContoso.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+
+        public IActionResult AtualizarCreditosDosCursos() => View();
+
+        [HttpPost]
+        public async Task<IActionResult> AtualizarCreditosDosCursos(int? multiplicador)
+        {
+            if (multiplicador != null)
+                ViewData["LinhasAfetadas"] =
+                    await _context.Database.ExecuteSqlCommandAsync("UPDATE Curso SET Creditos = Creditos * {0}", parameters: multiplicador);
+
+            return View();
+        }
     }
 }

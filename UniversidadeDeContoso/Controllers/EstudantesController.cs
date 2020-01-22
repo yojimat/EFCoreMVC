@@ -39,21 +39,37 @@ namespace UniversidadeDeContoso.Controllers
             if (!string.IsNullOrEmpty(textoProcurado))
                 estudantes = estudantes.Where(e => e.Sobrenome.Contains(textoProcurado) || e.Nome.Contains(textoProcurado));
 
-            switch (tipoDeOrdenamento)
+            if (string.IsNullOrEmpty(tipoDeOrdenamento))
+                tipoDeOrdenamento = "Sobrenome";
+
+            bool decrescente = false;
+
+            if (tipoDeOrdenamento.EndsWith("_desc"))
             {
-                case "nome_desc":
-                    estudantes = estudantes.OrderByDescending(s => s.Nome);
-                    break;
-                case "Data":
-                    estudantes = estudantes.OrderBy(s => s.DataDeMatricula);
-                    break;
-                case "data_desc":
-                    estudantes = estudantes.OrderByDescending(s => s.DataDeMatricula);
-                    break;
-                default:
-                    estudantes = estudantes.OrderBy(s => s.Sobrenome);
-                    break;
+                tipoDeOrdenamento = tipoDeOrdenamento.Substring(0, tipoDeOrdenamento.Length - 5);
+                decrescente = true;
             }
+
+            if (decrescente)
+                estudantes = estudantes.OrderByDescending(e => EF.Property<object>(e, tipoDeOrdenamento));
+            else
+                estudantes = estudantes.OrderBy(e => EF.Property<object>(e, tipoDeOrdenamento));
+
+            //switch (tipoDeOrdenamento)
+            //{
+            //    case "nome_desc":
+            //        estudantes = estudantes.OrderByDescending(s => s.Nome);
+            //        break;
+            //    case "Data":
+            //        estudantes = estudantes.OrderBy(s => s.DataDeMatricula);
+            //        break;
+            //    case "data_desc":
+            //        estudantes = estudantes.OrderByDescending(s => s.DataDeMatricula);
+            //        break;
+            //    default:
+            //        estudantes = estudantes.OrderBy(s => s.Sobrenome);
+            //        break;
+            //}
 
             int tamanhoDaPagina = 3;
 
